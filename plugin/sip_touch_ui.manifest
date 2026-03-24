@@ -1,0 +1,7 @@
+Touch UI
+Large phone-friendly station controls for SIP run-once watering.
+###
+sip_touch_ui.py plugins
+###
+sip_touch_ui.html templates
+sip_touch_ui.js static/scripts

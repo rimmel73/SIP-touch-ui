@@ -1,0 +1,394 @@
+$def with (stations, durations, status)
+
+$var title: $_('SIP Touch UI')
+$var page: sip_touch_ui
+
+<style>
+    :root {
+        --touch-bg: #f2ead7;
+        --touch-panel: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(249,241,220,0.94));
+        --touch-border: #d7c39b;
+        --touch-ink: #1f2b21;
+        --touch-muted: #637064;
+        --touch-accent: #2f7d4c;
+        --touch-accent-press: #245e39;
+        --touch-accent-glow: rgba(47, 125, 76, 0.28);
+        --touch-danger: #a73a28;
+        --touch-danger-press: #832d1f;
+        --touch-gold: #c89525;
+        --touch-shadow: 0 18px 36px rgba(71, 57, 30, 0.12);
+    }
+
+    #touchUi {
+        color: var(--touch-ink);
+    }
+
+    #touchUi .durationShell,
+    #touchUi .stationGrid,
+    #touchUi .stopShell,
+    #touchUi .messageBar,
+    #touchUi .confirmCard {
+        border: 1px solid var(--touch-border);
+        border-radius: 24px;
+        box-shadow: var(--touch-shadow);
+        background: var(--touch-panel);
+    }
+
+    #touchUi .durationShell,
+    #touchUi .messageBar,
+    #touchUi .stopShell {
+        margin-bottom: 18px;
+        padding: 18px;
+    }
+
+    #touchUi .messageBar p {
+        margin: 0;
+        color: var(--touch-muted);
+    }
+
+    #touchUi .sectionTitle {
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--touch-muted);
+    }
+
+    #touchUi .durationChoices {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    #touchUi .durationChoice {
+        min-height: 54px;
+        border: 1px solid rgba(47, 125, 76, 0.2);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.8);
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--touch-ink);
+        transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    #touchUi .durationChoice.active {
+        border-color: var(--touch-accent);
+        background: linear-gradient(180deg, rgba(69, 152, 97, 0.18), rgba(47, 125, 76, 0.1));
+        box-shadow: 0 10px 24px var(--touch-accent-glow);
+        transform: translateY(-1px);
+    }
+
+    #touchUi .durationChoice:active,
+    #touchUi .stationButton:active,
+    #touchUi .stopButton:active,
+    #touchUi .confirmButton:active,
+    #touchUi .cancelButton:active {
+        transform: translateY(1px) scale(0.99);
+    }
+
+    #touchUi .stationGrid {
+        display: grid;
+        gap: 14px;
+        padding: 14px;
+    }
+
+    #touchUi .stationButton {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 76px;
+        width: 100%;
+        border: 0;
+        border-radius: 20px;
+        padding: 16px 18px;
+        background:
+            linear-gradient(135deg, rgba(41, 109, 66, 1), rgba(58, 137, 88, 1));
+        color: white;
+        box-shadow: 0 14px 28px rgba(47, 125, 76, 0.25);
+        text-align: left;
+    }
+
+    #touchUi .stationButton.active {
+        background:
+            linear-gradient(135deg, rgba(200, 149, 37, 1), rgba(162, 108, 12, 1));
+        box-shadow: 0 14px 28px rgba(200, 149, 37, 0.24);
+    }
+
+    #touchUi .stationMeta strong {
+        display: block;
+        font-size: 1.12rem;
+        line-height: 1.2;
+    }
+
+    #touchUi .stationMeta span {
+        display: block;
+        opacity: 0.88;
+        font-size: 0.86rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    #touchUi .stationMeta .stationSubtle {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+
+    #touchUi .stationMeta .stationSubtle .stationNumberLine {
+        flex: 0 0 auto;
+    }
+
+    #touchUi .stationMeta .stationSubtle .lastRunLine {
+        flex: 1 1 auto;
+        text-align: right;
+    }
+
+    #touchUi .stopButton,
+    #touchUi .confirmButton,
+    #touchUi .cancelButton {
+        width: 100%;
+        min-height: 68px;
+        border: 0;
+        border-radius: 20px;
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+
+    #touchUi .stopButton {
+        background: linear-gradient(135deg, var(--touch-danger), #c24d37);
+        color: white;
+        box-shadow: 0 14px 28px rgba(167, 58, 40, 0.22);
+    }
+
+    #touchUi .messageBar {
+        display: none;
+    }
+
+    #touchUi .messageBar.visible {
+        display: block;
+    }
+
+    #touchUi .messageBar.ok {
+        border-color: rgba(47, 125, 76, 0.35);
+    }
+
+    #touchUi .confirmLayer {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(19, 23, 20, 0.48);
+        padding: 18px;
+        z-index: 999;
+    }
+
+    #touchUi .confirmLayer.visible {
+        display: flex;
+    }
+
+    #touchUi .confirmCard {
+        width: min(100%, 520px);
+        padding: 20px;
+        border-bottom-left-radius: 28px;
+        border-bottom-right-radius: 28px;
+        background:
+            radial-gradient(circle at top, rgba(47, 125, 76, 0.11), transparent 45%),
+            var(--touch-panel);
+    }
+
+    #touchUi .confirmCard h2 {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+    }
+
+    #touchUi .confirmCard p {
+        margin: 0;
+        color: var(--touch-muted);
+    }
+
+    #touchUi .confirmActions {
+        display: grid;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    #touchUi .confirmButton {
+        background: linear-gradient(135deg, var(--touch-accent), #41a062);
+        color: white;
+    }
+
+    #touchUi .cancelButton {
+        background: rgba(217, 207, 183, 0.88);
+        color: var(--touch-ink);
+    }
+
+    @media (max-width: 640px) {
+        #touchUi .durationChoices {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+</style>
+
+<script>
+    jQuery(document).ready(function() {
+        const durations = $:{json.dumps(durations, ensure_ascii=False)};
+        const stations = $:{json.dumps(stations, ensure_ascii=False)};
+        let selectedDuration = durations[3] || durations[0];
+        let selectedStation = null;
+
+        function renderStatus(nextStatus) {
+            jQuery(".stationButton").removeClass("active");
+            (nextStatus.active || []).forEach(function(stationIndex) {
+                jQuery('.stationButton[data-station="' + stationIndex + '"]').addClass("active");
+            });
+        }
+
+        function setMessage(message, ok) {
+            const bar = jQuery("#touchMessage");
+            bar.addClass("visible");
+            bar.toggleClass("ok", !!ok);
+            bar.find("p").text(message);
+        }
+
+        function updateDurationButtons() {
+            jQuery(".durationChoice").removeClass("active");
+            jQuery('.durationChoice[data-seconds="' + selectedDuration.seconds + '"]').addClass("active");
+            jQuery("#selectedDurationLabel").text(selectedDuration.label);
+        }
+
+        function openConfirm(stationIndex) {
+            selectedStation = stations.find(function(station) {
+                return station.index === stationIndex;
+            });
+            if (!selectedStation) {
+                return;
+            }
+            jQuery("#confirmText").text("$_('Run') " + selectedStation.name + " $_('for') " + selectedDuration.label + "?");
+            jQuery("#touchConfirm").addClass("visible");
+        }
+
+        function closeConfirm() {
+            selectedStation = null;
+            jQuery("#touchConfirm").removeClass("visible");
+        }
+
+        function postForm(url, payload, onSuccess) {
+            jQuery.ajax({
+                url: url,
+                method: "POST",
+                data: payload,
+                dataType: "json"
+            }).done(function(response) {
+                setMessage(response.message, response.ok);
+                if (response.status) {
+                    renderStatus(response.status);
+                }
+                if (onSuccess) {
+                    onSuccess(response);
+                }
+            }).fail(function() {
+                setMessage("$_('Request failed.')", false);
+            });
+        }
+
+        jQuery(".durationChoice").on("click", function() {
+            const seconds = parseInt(jQuery(this).data("seconds"), 10);
+            selectedDuration = durations.find(function(item) {
+                return item.seconds === seconds;
+            }) || durations[0];
+            updateDurationButtons();
+        });
+
+        jQuery(".stationButton").on("click", function() {
+            openConfirm(parseInt(jQuery(this).data("station"), 10));
+        });
+
+        jQuery("#touchCancel").on("click", function() {
+            closeConfirm();
+        });
+
+        jQuery("#touchConfirmRun").on("click", function() {
+            if (!selectedStation) {
+                return;
+            }
+            postForm("/touch-ui/run", {
+                station: selectedStation.index,
+                seconds: selectedDuration.seconds
+            }, function() {
+                closeConfirm();
+            });
+        });
+
+        jQuery("#touchStop").on("click", function() {
+            postForm("/touch-ui/stop", {});
+        });
+
+        function refreshStatus() {
+            jQuery.getJSON("/touch-ui/status", function(nextStatus) {
+                renderStatus(nextStatus);
+            });
+        }
+
+        renderStatus($:{json.dumps(status, ensure_ascii=False)});
+        updateDurationButtons();
+        setInterval(refreshStatus, 4000);
+    });
+</script>
+
+<div id="touchUi">
+    <section class="durationShell">
+        <h2 class="sectionTitle">$_('Duration')</h2>
+        <div class="durationChoices">
+            $for duration in durations:
+                <button
+                    type="button"
+                    class="durationChoice${' active' if duration['seconds'] == 60 else ''}"
+                    data-seconds="${duration['seconds']}"
+                >
+                    ${duration['label']}
+                </button>
+        </div>
+    </section>
+
+    <section class="stationGrid">
+        $for station in stations:
+            <button type="button" class="stationButton" data-station="${station['index']}">
+                <span class="stationMeta">
+                    <strong>${station['name']}</strong>
+                    <span class="stationSubtle">
+                        <span class="stationNumberLine">$_('Station') ${station['number']}</span>
+                        <span class="lastRunLine">
+                            $_('Last ran') ${station['last_run']['relative']}
+                            $if station['last_run']['duration']:
+                                , $_('for') ${station['last_run']['duration']}
+                        </span>
+                    </span>
+                </span>
+            </button>
+    </section>
+
+    <section class="messageBar" id="touchMessage">
+        <p></p>
+    </section>
+
+    <section class="stopShell">
+        <button type="button" class="stopButton" id="touchStop">$_('Stop All Stations')</button>
+    </section>
+
+    <div class="confirmLayer" id="touchConfirm">
+        <div class="confirmCard">
+            <h2>$_('Are you sure?')</h2>
+            <p id="confirmText"></p>
+            <div class="confirmActions">
+                <button type="button" class="confirmButton" id="touchConfirmRun">$_('Yes, run station')</button>
+                <button type="button" class="cancelButton" id="touchCancel">$_('Cancel')</button>
+            </div>
+        </div>
+    </div>
+</div>
