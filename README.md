@@ -1,6 +1,6 @@
 # SIP Touch UI
 
-Touch-first SIP plugin for fast station runs from a phone.
+AI vibe coded Touch-first SIP plugin for fast station runs from a phone.
 
 ## What It Does
 
@@ -52,10 +52,6 @@ Or, if you have a local SIP checkout, run:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install-to-sip.ps1
 ```
-
-## Status
-
-This version is wired to the current `Dan-in-CA/SIP` code cloned in this workspace, but it has not yet been exercised against your Raspberry Pi instance.
 
 ## Next Step
 
